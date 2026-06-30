@@ -1,0 +1,21 @@
+.env
+/vendor
+/node_modules
+*.log
+.DS_Store
+
+# Database
+/database/*.sqlite
+/database/*.db
+
+# Backups
+/backups/
+
+# Logs
+/logs/
+
+# Cache
+*.cache
+
+# GitHub cache
+/logs/github/

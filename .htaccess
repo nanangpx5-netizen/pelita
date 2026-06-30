@@ -1,0 +1,28 @@
+# PELITA - Root .htaccess
+# Redirect all requests to public folder
+
+RewriteEngine On
+RewriteBase /pelita/
+
+# If not accessing public folder, redirect there
+RewriteCond %{REQUEST_URI} !^/pelita/public/
+RewriteCond %{REQUEST_URI} !^/pelita/admin/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Block access to sensitive files
+<FilesMatch "\.(env|sql|md|log|ini|git)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to sensitive directories
+RedirectMatch 403 ^/pelita/(config|classes|includes|sql|tests)/.*$
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
