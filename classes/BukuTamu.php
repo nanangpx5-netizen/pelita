@@ -42,9 +42,13 @@ class BukuTamu {
     public function generateNomorAntrian(): string {
         $today = date('Y-m-d');
         $count = $this->db->count(
-            $this->table, 
-            "DATE(created_at) = :today", 
-            ['today' => $today]
+            $this->table,
+            "tahun = :tahun AND bulan = :bulan AND hari = :hari",
+            [
+                'tahun' => date('Y'),
+                'bulan' => date('m'),
+                'hari' => date('d'),
+            ]
         );
         return str_pad($count + 1, 3, '0', STR_PAD_LEFT);
     }
@@ -136,20 +140,27 @@ class BukuTamu {
      * Get statistics
      */
     public function getStats(): array {
-        if ($this->db->isSqlite()) {
-            return [
-                'total' => $this->db->count($this->table),
-                'hari_ini' => $this->db->count($this->table, "date(created_at, 'localtime') = date('now', 'localtime')"),
-                'bulan_ini' => $this->db->count($this->table, "strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')"),
-                'tahun_ini' => $this->db->count($this->table, "strftime('%Y', created_at, 'localtime') = strftime('%Y', 'now', 'localtime')")
-            ];
-        }
+        $todayYear = date('Y');
+        $todayMonth = date('m');
+        $todayDay = date('d');
 
         return [
             'total' => $this->db->count($this->table),
-            'hari_ini' => $this->db->count($this->table, "DATE(created_at) = CURDATE()"),
-            'bulan_ini' => $this->db->count($this->table, "YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())"),
-            'tahun_ini' => $this->db->count($this->table, "YEAR(created_at) = YEAR(CURDATE())")
+            'hari_ini' => $this->db->count(
+                $this->table,
+                "tahun = :tahun AND bulan = :bulan AND hari = :hari",
+                ['tahun' => $todayYear, 'bulan' => $todayMonth, 'hari' => $todayDay]
+            ),
+            'bulan_ini' => $this->db->count(
+                $this->table,
+                "tahun = :tahun AND bulan = :bulan",
+                ['tahun' => $todayYear, 'bulan' => $todayMonth]
+            ),
+            'tahun_ini' => $this->db->count(
+                $this->table,
+                "tahun = :tahun",
+                ['tahun' => $todayYear]
+            ),
         ];
     }
 

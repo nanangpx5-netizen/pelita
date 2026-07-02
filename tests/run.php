@@ -107,6 +107,9 @@ $total = $bukuTamu->getTotalFiltered(date('m'), date('Y'), 'Tester');
 test_assert($total >= 2, 'getTotalFiltered() matches search results');
 $stats = $bukuTamu->getStats();
 test_assert($stats['total'] >= 2, 'getStats() returns aggregate counts');
+test_assert($stats['hari_ini'] >= 2, 'getStats() hari_ini counter matches total records inserted today (was ' . $stats['hari_ini'] . ')');
+test_assert($stats['hari_ini'] >= $stats['total'] - 1 || $stats['total'] < 3, 'getStats() hari_ini reflects all today records');
+
 
 echo "\n== Test 5: Kepuasan model ==\n";
 $kepuasan = new Kepuasan();
@@ -119,6 +122,44 @@ test_assert($kstats['total'] >= 3, 'getStats() totals kepuasan correctly');
 test_assert(isset($kstats['persen_sangat_puas'], $kstats['persen_puas'], $kstats['persen_kurang_puas']), 'getStats() computes percentages');
 $klist = $kepuasan->getFiltered(date('m'), date('Y'), 'Puas', 1, 20);
 test_assert(count($klist) >= 1, 'getFiltered() supports rating filter');
+
+echo "\n== Test 6: BukuTamu hari_ini counter (regression test) ==\n";
+$bukuTamu = new BukuTamu();
+$statsBefore = $bukuTamu->getStats();
+$hariIniBefore = $statsBefore['hari_ini'];
+
+$idNew = $bukuTamu->create([
+    'nama' => 'Hari_Ini_Tester',
+    'email' => 'hariini@test.com',
+    'alamat' => 'Test',
+    'nohp' => '081234567890',
+    'umur' => 25,
+    'asal' => 'Regression Test',
+    'jenis_kelamin' => 'Laki-laki',
+    'pendidikan' => 'S1',
+    'pekerjaan' => 'Tester',
+    'keperluan' => 'Konsultasi Statistik',
+    'keperluan_lain' => 'Test hari_ini counter',
+    'tanggal' => date('Y-m-d'),
+    'waktu' => date('H:i:s'),
+]);
+test_assert($idNew > 0, 'Insert new buku_tamu record succeeds');
+
+$statsAfter = $bukuTamu->getStats();
+test_assert(
+    $statsAfter['hari_ini'] === $hariIniBefore + 1,
+    'hari_ini counter increments by 1 after insert (before: ' . $hariIniBefore . ', after: ' . $statsAfter['hari_ini'] . ')'
+);
+test_assert($statsAfter['hari_ini'] > 0, 'hari_ini is never 0 when records exist today');
+
+// Cleanup
+$db->delete('buku_tamu', "id = :id", ['id' => $idNew]);
+// Re-check after deletion
+$statsAfterDelete = $bukuTamu->getStats();
+test_assert(
+    $statsAfterDelete['hari_ini'] === $statsAfter['hari_ini'] - 1,
+    'hari_ini counter decrements after record deletion'
+);
 
 echo "\n== Summary ==\n";
 echo "Passed: {$results['passed']}\n";
