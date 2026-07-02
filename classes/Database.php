@@ -93,6 +93,32 @@ class Database {
         $this->pdo = new PDO($dsn, null, null, $options);
         // Enable Foreign Keys for SQLite
         $this->pdo->exec("PRAGMA foreign_keys = ON;");
+
+        // Auto-initialize schema if main table does not exist
+        $this->initSchemaIfNeeded();
+    }
+
+    private function initSchemaIfNeeded(): void {
+        try {
+            $stmt = $this->pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='buku_tamu'");
+            $tableExists = $stmt->fetchColumn();
+
+            if (!$tableExists) {
+                $schemaFile = dirname(__DIR__) . '/sql/sqlite_schema.sql';
+                if (file_exists($schemaFile)) {
+                    $sql = file_get_contents($schemaFile);
+                    $statements = array_filter(array_map('trim', explode(';', $sql)));
+                    foreach ($statements as $stmt) {
+                        if (!empty($stmt)) {
+                            $this->pdo->exec($stmt);
+                        }
+                    }
+                    error_log("[PELITA] SQLite schema auto-initialized from sqlite_schema.sql");
+                }
+            }
+        } catch (Exception $e) {
+            error_log("[PELITA] Schema init check failed: " . $e->getMessage());
+        }
     }
 
     public function isSqlite(): bool {

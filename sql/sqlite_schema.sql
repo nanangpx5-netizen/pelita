@@ -107,3 +107,82 @@ INSERT OR IGNORE INTO `ref_keperluan` (`nama`) VALUES
 ('Perpustakaan Tercetak'), ('Perpustakaan Digital'), 
 ('Penjualan Publikasi'), ('Konsultasi Statistik'), 
 ('Data Mikro'), ('Rekomendasi Kegiatan Statistik'), ('Lainnya');
+
+-- ============================================
+-- Table: ref_layanan (Antrian)
+-- ============================================
+CREATE TABLE IF NOT EXISTS `ref_layanan` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `kode` TEXT NOT NULL UNIQUE,
+    `nama` TEXT NOT NULL,
+    `deskripsi` TEXT DEFAULT NULL,
+    `max_harian` INTEGER DEFAULT 100,
+    `is_active` INTEGER DEFAULT 1,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO `ref_layanan` (`kode`, `nama`, `deskripsi`, `max_harian`) VALUES
+('UMU', 'Pelayanan Umum', 'Pelayanan informasi dan konsultasi umum', 100),
+('DMI', 'Data Mikro', 'Permintaan data mikro dan statistik daerah', 50),
+('PUB', 'Penjualan Publikasi', 'Pembelian publikasi resmi BPS', 30),
+('PRK', 'Perpustakaan', 'Akses perpustakaan dan referensi', 40),
+('KNS', 'Konsultasi Statistik', 'Konsultasi metodologi dan analisis statistik', 20);
+
+-- ============================================
+-- Table: antrian
+-- ============================================
+CREATE TABLE IF NOT EXISTS `antrian` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `kode_layanan` TEXT NOT NULL,
+    `nomor_urut` INTEGER NOT NULL,
+    `tanggal` TEXT NOT NULL,
+    `nomor_antrian` TEXT NOT NULL,
+    `status` TEXT NOT NULL DEFAULT 'menunggu',
+    `waktu_ambil` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `waktu_panggil` DATETIME DEFAULT NULL,
+    `waktu_selesai` DATETIME DEFAULT NULL,
+    `nama_pemohon` TEXT DEFAULT NULL,
+    `nohp_pemohon` TEXT DEFAULT NULL,
+    `catatan` TEXT DEFAULT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS `idx_antrian_tanggal` ON `antrian` (`tanggal`);
+CREATE INDEX IF NOT EXISTS `idx_antrian_status` ON `antrian` (`status`);
+CREATE INDEX IF NOT EXISTS `idx_antrian_layanan_tanggal` ON `antrian` (`kode_layanan`, `tanggal`);
+
+-- ============================================
+-- Table: github_updates
+-- ============================================
+CREATE TABLE IF NOT EXISTS `github_updates` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `fetch_type` TEXT NOT NULL,
+    `sha` TEXT DEFAULT NULL,
+    `message` TEXT DEFAULT NULL,
+    `author_name` TEXT DEFAULT NULL,
+    `author_email` TEXT DEFAULT NULL,
+    `author_username` TEXT DEFAULT NULL,
+    `date` TEXT DEFAULT NULL,
+    `url` TEXT DEFAULT NULL,
+    `tag_name` TEXT DEFAULT NULL,
+    `name` TEXT DEFAULT NULL,
+    `body_preview` TEXT DEFAULT NULL,
+    `prerelease` INTEGER DEFAULT 0,
+    `draft` INTEGER DEFAULT 0,
+    `published_at` TEXT DEFAULT NULL,
+    `number` INTEGER DEFAULT NULL,
+    `title` TEXT DEFAULT NULL,
+    `state` TEXT DEFAULT NULL,
+    `labels` TEXT DEFAULT NULL,
+    `created_at` TEXT DEFAULT NULL,
+    `updated_at` TEXT DEFAULT NULL,
+    `comments` INTEGER DEFAULT 0,
+    `merged_at` TEXT DEFAULT NULL,
+    `head_branch` TEXT DEFAULT NULL,
+    `base_branch` TEXT DEFAULT NULL,
+    `user` TEXT DEFAULT NULL,
+    `fetched_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS `idx_github_fetch_type` ON `github_updates` (`fetch_type`);
+CREATE INDEX IF NOT EXISTS `idx_github_fetched_at` ON `github_updates` (`fetched_at`);
